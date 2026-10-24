@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN"><meta charset="UTF-8"><body><div id="app"></div><script type="module">
+import {createApp,h} from 'vue';
+import {ElConfigProvider} from 'element-plus';
+import DownloadList from '/src/components/DownloadList.vue';
+import 'element-plus/dist/index.css';
+import '/src/assets/styles.css';
+const base={id:'1',title:'房间 刘瑞琦',cover:'',bvid:'BV1EcaU6UEC9',page:1,quality:'1080P60 · 192K AAC',filename:'示例.mp4',status:'completed',downloaded:45088768,total:45088768,speed:0,error:null};
+createApp({render:()=>h(ElConfigProvider,{size:'small'},()=>h('main',{style:'max-width:820px;margin:24px auto;background:white;border:1px solid #e5e8ef;border-radius:12px;overflow:hidden;height:420px;display:flex;flex-direction:column'},[h(DownloadList,{tasks:[base,{...base,id:'2',title:'较长标题示例：钢琴演奏与旅行记录，检查信息换行及操作区域',status:'running',downloaded:12000000,speed:2400000,phase:'video'}],emptyLabel:'暂无下载',removing:[],retrying:[]})]))}).mount('#app');
+</script></body></html>

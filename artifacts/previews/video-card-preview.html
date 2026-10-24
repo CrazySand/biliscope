@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>视频结果区 · 隔离预览</title></head>
+<body><div id="app"></div>
+<script type="module">
+import { createApp, h, ref } from 'vue'
+import { ElConfigProvider } from 'element-plus'
+import VideoCard from '/src/components/VideoCard.vue'
+import 'element-plus/dist/index.css'
+import '/src/assets/styles.css'
+const video = {
+  bvid: 'BV1EXAMPLE00', aid: 0, title: '左手《诀别书》，右手《爱乐之城》',
+  cover: '', duration: 84, owner: '示例 UP 主', page: 1, pages: [{page:1,cid:1,part:'钢琴演奏',duration:84}],
+  qualities: [{id: 116,label:'1080P+',codec:'AVC',width:1920,height:1080,fps:'60',bandwidth:4000000,size:52219084,mode:'dash',url:'',backup:[],audioLabel:'192K AAC',audioUrl:'',audioBackup:[],audioSize:null,needsVip:false,recommended:true}],
+  accept: [116], loggedIn:true, hint:'已登录：清晰度以 B 站实际下发为准；4K / HDR / 杜比需要大会员。'
+}
+createApp({setup(){
+  const edge = ref(false)
+  const busy = ref(false)
+  return ()=>h(ElConfigProvider,{size:'small'},()=>h('main',{style:'max-width:1000px;margin:32px auto;padding:0 20px'},[
+    h('p',{style:'color:#687487;font-size:12px'},'隔离预览 · 示例数据 · 不调用下载接口'),
+    h('button',{onClick:()=>edge.value=!edge.value,style:'margin-bottom:16px'},'切换长标题与多分 P'),
+    h('section',{class:'capture-panel'},h(VideoCard,{
+      video:edge.value ? {...video,title:'超长标题布局检查：钢琴演奏与音乐赏析 Piano Performance — 多分 P 与高清音视频下载示例',owner:'很长的 UP 主名称用于检查截断和对齐',pages:[...video.pages,{page:2,cid:2,part:'第二段演奏',duration:84}]} : video,
+      selectedQuality:0,busy:busy.value,onDownload:()=>{busy.value=true;setTimeout(()=>busy.value=false,1500)}
+    }))
+  ]))
+}}).mount('#app')
+</script></body></html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>评论记录 · 隔离交互验证</title></head>
+<body><div id="app"></div><script type="module">
+import { createApp, h, ref } from 'vue'
+import { ElConfigProvider } from 'element-plus'
+import CommentDialog from '/src/components/CommentDialog.vue'
+import { api } from '/src/api.ts'
+import 'element-plus/dist/index.css'
+import '/src/assets/styles.css'
+const records = [
+  {bvid:'BV1PREVIEW01',title:'钢琴演奏 · 示例视频 A',total:3,updatedAt:2},
+  {bvid:'BV1PREVIEW02',title:'旅行记录 · 示例视频 B',total:1,updatedAt:1}
+]
+const empty = new URLSearchParams(location.search).has('empty')
+let jobs = new URLSearchParams(location.search).has('completed') ? [{id:'preview-completed',bvid:records[1].bvid,title:records[1].title,status:'completed',pages:6,roots:119,subs:0,total:300,current:'采集完成',note:'已达到本次页数上限（6 页），可扩大范围补采；补采从第 1 页开始，已有评论去重保留',startedAt:1,finishedAt:2}] : []
+const calls = ref([])
+api.commentVideos = async()=>structuredClone(records)
+api.deleteCommentVideo = async bvid=>{
+  const index=records.findIndex(item=>item.bvid===bvid)
+  if(index>=0) records.splice(index,1)
+  jobs=jobs.filter(item=>item.bvid!==bvid)
+}
+api.commentJobs = async()=>structuredClone(jobs)
+api.commentStats = async bvid=> new URLSearchParams(location.search).has('long') ? {roots:45,subs:0,total:45} : empty ? {roots:0,subs:0,total:0} : bvid==='BV1PREVIEW01' ? {roots:2,subs:1,total:3} : {roots:1,subs:0,total:1}
+api.comments = async (bvid,offset=0,limit=20)=> {
+  if (empty) return []
+  // The first video's intentionally slower read must never replace video B.
+  if (bvid==='BV1PREVIEW01') await new Promise(resolve=>setTimeout(resolve,500))
+  const rows = [{rpid:bvid==='BV1PREVIEW01'?1:2,root:0,parent:0,mid:1,uname:'示例用户',avatarUrl:'https://i2.hdslb.com/bfs/face/df0e63f0c334d134b50b050b51208e5a607a64fe.jpg',message:bvid==='BV1PREVIEW01'?'A 视频的已保存评论':'B 视频的已保存评论',like:12,ctime:1700000000,isSub:false,rcount:0}]
+  return new URLSearchParams(location.search).has('long') ? Array.from({length:45}, (_,index)=>({...rows[0],rpid:index+1,message:`示例评论 ${index+1}`})).slice(offset,offset+limit) : rows
+}
+api.startCommentCrawl = async(bvid,mode,maxPages)=>{
+  calls.value.push({bvid,mode,maxPages})
+  const job={id:crypto.randomUUID(),bvid,aid:1,title:records.find(item=>item.bvid===bvid)?.title || bvid,mode,status:'running',total:100,roots:0,subs:0,pages:0,current:'第 1 页',note:null,error:null,startedAt:Date.now(),finishedAt:null}
+  jobs.unshift(job)
+  return structuredClone(job)
+}
+api.cancelCommentCrawl = async id=>{
+  const job=jobs.find(item=>item.id===id)
+  if(job){job.status='cancelled';job.current='已停止';job.finishedAt=Date.now()}
+}
+createApp({setup(){
+  const visible=ref(false)
+  const target=ref(null)
+  const open=video=>{target.value=video;visible.value=true}
+  return ()=>h(ElConfigProvider,{size:'small'},()=>h('main',{style:'padding:24px'},[
+    h('p','隔离示例：不读写真实评论、不发起采集请求'),
+    h('button',{onClick:()=>open(null)},'评论记录'),
+    h('button',{onClick:()=>open(records[0])},'从视频 A 进入'),
+    h('button',{onClick:()=>open(records[1])},'切换到视频 B'),
+    h('pre',{id:'requests'},JSON.stringify(calls.value,null,2)),
+    h('div',{style:visible.value?'position:fixed;inset:0;background:#f5f6f9;z-index:10':'display:none'},[h(CommentDialog,{modelValue:visible.value,video:target.value,'onUpdate:modelValue':value=>visible.value=value})])
+  ]))
+}}).mount('#app')
+</script></body></html>
