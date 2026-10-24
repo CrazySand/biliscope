@@ -80,10 +80,24 @@ if errorlevel 1 (
   echo [ERROR] Cannot copy installers to the release directory.
   goto failed
 )
-echo Installer directory:
-echo   %~dp0release
+rem Workspace files may inherit a Low integrity label from the dev sandbox.
+rem Publish directly from Cargo output to the user's normal Downloads folder.
+set "BUILD_PUBLISH_DIR=%USERPROFILE%\Downloads\BiliScope-release"
+if not exist "%BUILD_PUBLISH_DIR%" mkdir "%BUILD_PUBLISH_DIR%"
+if not exist "%BUILD_PUBLISH_DIR%" (
+  echo [ERROR] Cannot create the installer publishing directory.
+  goto failed
+)
+copy /y "%CARGO_TARGET_DIR%\release\bundle\nsis\*.exe" "%BUILD_PUBLISH_DIR%\" >nul
+if errorlevel 1 (
+  echo [ERROR] Cannot publish the installers to Downloads.
+  goto failed
+)
+echo Installer directory - run the installer from here:
+echo   %BUILD_PUBLISH_DIR%
+echo Project archive copy: %~dp0release
 echo.
-dir /b "%~dp0release\*.exe" 2>nul
+dir /b "%BUILD_PUBLISH_DIR%\*.exe" 2>nul
 goto finish
 
 :failed

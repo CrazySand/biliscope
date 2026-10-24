@@ -2242,3 +2242,31 @@ canvas {
   user-select: none;
 }
 img, svg { -webkit-user-drag: none; }
+
+.video-page-row { gap: 8px; margin-top: 12px; }
+.video-page-row .page-select { flex: 1; width: auto; min-width: 0; }
+.video-page-row .el-select__wrapper { min-height: 34px; }
+.video-page-navigation { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.video-page-navigation .el-button { width: 28px; height: 32px; padding: 0; margin: 0; border-radius: 7px; }
+.video-page-count { display: inline-flex; justify-content: center; align-items: center; min-width: 44px; color: var(--el-text-color-secondary); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.video-parts-menu .el-select-dropdown__item { height: auto; min-height: 36px; padding: 8px 12px; line-height: 1.5; }
+.video-part-option { display: flex; align-items: flex-start; gap: 10px; }
+.video-part-number { flex-shrink: 0; min-width: 24px; color: var(--el-text-color-secondary); font-size: 12px; font-variant-numeric: tabular-nums; }
+.video-part-title { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.video-part-duration { flex-shrink: 0; color: var(--el-text-color-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* 分集使右侧信息增高时，封面同步铺满该行，保持底边对齐。 */
+@media (min-width: 581px) {
+  .capture-panel .video-card.has-pages .video-cover {
+    align-self: stretch;
+    aspect-ratio: auto;
+    min-height: 0;
+  }
+
+  .capture-panel .video-card.has-pages .video-cover img {
+    position: absolute;
+    inset: 0;
+    object-fit: cover;
+    object-position: center;
+  }
+}

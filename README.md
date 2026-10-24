@@ -49,7 +49,7 @@ npm run tauri dev
 
 双击根目录 `build.cmd`，或在终端执行 `build.cmd --no-pause`。脚本检查 Node.js、npm、Cargo 和本地 Tauri CLI，随后执行 `npm run build:exe`，依次构建前端、Rust release 程序与 NSIS 安装包。还需要已安装 MSVC C++ Build Tools 和 Windows SDK；缺少依赖时脚本会提示并退出，不会自动安装。
 
-安装包在打包成功后自动复制到项目根目录的 `release/`，可直接分发其中的 `*-setup.exe`。Rust 中间构建文件仍保留在 `%TEMP%\biliscope-target`。默认完成或失败后暂停，方便查看结果；`--no-pause` 适合终端或自动化调用。`build.cmd --check --no-pause` 只检查基础命令与依赖是否存在，不执行打包，也不验证完整编译工具链。
+安装包在打包成功后发布到 `%USERPROFILE%\Downloads\BiliScope-release\`，请从这个目录运行或分发 `*-setup.exe`。项目根目录 `release/` 保留归档副本；沙箱工作区可能给文件附加 Low 完整性标签，直接运行该副本可能无法写入普通安装目录，因此发布文件直接从 Cargo 输出复制到用户下载目录，不修改工作区安全策略。Rust 中间构建文件仍保留在 `%TEMP%\biliscope-target`。默认完成或失败后暂停，方便查看结果；`--no-pause` 适合终端或自动化调用。`build.cmd --check --no-pause` 只检查基础命令与依赖是否存在，不执行打包，也不验证完整编译工具链。
 
 FFmpeg 不打入安装包，目标机器仍需预先安装并加入 PATH。
 

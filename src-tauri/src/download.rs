@@ -678,8 +678,21 @@ fn audio_extension(format: &str) -> &str {
     }
 }
 
+// 后台工具不创建 Windows 控制台；仍保留输出捕获和退出状态。
+fn background_command(program: &str) -> std::process::Command {
+    let mut command = std::process::Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    command.stdin(std::process::Stdio::null());
+    command
+}
+
 fn media_output_command(ffmpeg: &str, source: &Path, audio: Option<&Path>, output: &Path) -> tokio::process::Command {
-    let mut command = tokio::process::Command::new(ffmpeg);
+    let mut command = tokio::process::Command::from(background_command(ffmpeg));
     command.arg("-n").arg("-i").arg(source);
     if let Some(audio) = audio {
         command.arg("-i").arg(audio).args(["-c", "copy"]);
@@ -756,7 +769,7 @@ pub fn resolve_ffmpeg() -> FfmpegStatus {
     candidates.push(("ffmpeg".into(), "path"));
 
     for (candidate, source) in candidates {
-        if let Ok(output) = std::process::Command::new(&candidate)
+        if let Ok(output) = background_command(&candidate)
             .arg("-version")
             .output()
         {
@@ -791,7 +804,7 @@ pub fn resolve_ffmpeg() -> FfmpegStatus {
 
 #[cfg(windows)]
 fn resolve_command_path(command: &str) -> Option<String> {
-    let output = std::process::Command::new("where.exe")
+    let output = background_command("where.exe")
         .arg(command)
         .output()
         .ok()?;

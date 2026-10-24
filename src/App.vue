@@ -35,6 +35,7 @@ const settings = ref<SettingsView>({
 })
 const login = ref<LoginState>({ loggedIn: false, uname: '', mid: 0, avatar: '', vip: false })
 const loading = ref(false)
+const switchingPage = ref(false)
 const adding = ref(false)
 const video = ref<VideoDetail | null>(null)
 const selectedQuality = ref(0)
@@ -135,7 +136,7 @@ onMounted(async () => {
 onUnmounted(() => notification?.close())
 
 async function parse(value: string) {
-  if (loading.value) return
+  if (loading.value || switchingPage.value) return
   lastInput.value = value
   parseError.value = ''
   loading.value = true
@@ -153,8 +154,8 @@ async function parse(value: string) {
 }
 
 async function loadPage(page: number) {
-  if (!lastInput.value || loading.value) return
-  loading.value = true
+  if (!lastInput.value || loading.value || switchingPage.value || adding.value || page === video.value?.page) return
+  switchingPage.value = true
   try {
     const detail = await api.fetchVideo(lastInput.value, page)
     video.value = detail
@@ -162,7 +163,7 @@ async function loadPage(page: number) {
   } catch (error) {
     report(String(error))
   } finally {
-    loading.value = false
+    switchingPage.value = false
   }
 }
 
@@ -170,7 +171,7 @@ async function download(audioOnly = false) {
   const detail = video.value
   const selected = detail ? detail.qualities[selectedQuality.value] : null
   const quality = audioOnly ? detail?.qualities.find(item => item.audioUrl) ?? selected : selected
-  if (!detail || !quality || adding.value) return
+  if (!detail || !quality || adding.value || switchingPage.value) return
   if (quality.mode === 'dash' && !quality.audioUrl) {
     report('该清晰度缺少音频流，请换一个清晰度。')
     return
@@ -271,7 +272,7 @@ function onSettingsSaved(view: SettingsView) {
             <h2 id="capture-title">添加视频</h2>
           </div>
           <div class="input-section">
-            <LinkInput :busy="loading" @parse="parse" @input-change="linkText = $event" />
+            <LinkInput :busy="loading || switchingPage" @parse="parse" @input-change="linkText = $event" />
           </div>
 
           <section v-if="loading || video || parseError" class="result-section" :aria-busy="loading">
@@ -291,7 +292,8 @@ function onSettingsSaved(view: SettingsView) {
               v-else-if="video"
               :video="video"
               :selected-quality="selectedQuality"
-              :busy="adding"
+              :busy="adding || switchingPage"
+              :page-busy="switchingPage"
               @download-audio="download(true)"
               :comment-busy="addingComment"
               @comments="addCommentTask"

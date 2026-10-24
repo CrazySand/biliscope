@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { ElButton, ElOption, ElSelect, ElTooltip } from 'element-plus'
-import { Clock3, Download as DownloadIcon, Film, Info, LoaderCircle, MessageSquarePlus, Music2, User } from '@lucide/vue'
+import { ChevronLeft, ChevronRight, Clock3, Download as DownloadIcon, Film, Info, LoaderCircle, MessageSquarePlus, Music2, User } from '@lucide/vue'
 import type { QualityOption, VideoDetail } from '../types'
 import { idBackground } from '../idColor'
+import { imageUrl } from '../imageUrl'
 
-const props = defineProps<{ video: VideoDetail; selectedQuality: number; busy?: boolean; commentBusy?: boolean }>()
+const props = defineProps<{ video: VideoDetail; selectedQuality: number; busy?: boolean; commentBusy?: boolean; pageBusy?: boolean }>()
 const emit = defineEmits<{
   'update:selectedQuality': [index: number]
   comments: []
@@ -14,7 +15,9 @@ const emit = defineEmits<{
   pageChange: [page: number]
 }>()
 
+const pageIndex = computed(() => props.video.pages.findIndex(page => page.page === props.video.page))
 const imageFailed = ref(false)
+const coverUrl = computed(() => imageUrl(props.video.cover))
 const current = computed<QualityOption | null>(
   () => props.video.qualities[props.selectedQuality] ?? null,
 )
@@ -68,11 +71,11 @@ function onQualityChange(value: string | number | boolean) {
 </script>
 
 <template>
-  <article class="video-card">
+  <article class="video-card" :class="{ 'has-pages': video.pages.length > 1 }">
     <div class="video-cover">
       <img
-        v-if="video.cover && !imageFailed"
-        :src="video.cover"
+        v-if="coverUrl && !imageFailed"
+        :src="coverUrl"
         alt="视频封面"
         referrerpolicy="no-referrer"
         @error="imageFailed = true"
@@ -92,23 +95,23 @@ function onQualityChange(value: string | number | boolean) {
         <span class="video-bv" :style="{ backgroundColor: idBackground(video.bvid), color: '#334155' }">{{ video.bvid }}</span>
       </div>
 
-      <div v-if="video.pages.length > 1" class="video-page-row">
-        <span class="video-field-label">分 P</span>
-        <ElSelect
-          v-if="video.pages.length > 1"
-          :model-value="video.page"
-          class="page-select"
-          size="small"
-          aria-label="选择分P"
-          @update:model-value="onPageChange"
-        >
-          <ElOption
-            v-for="page in video.pages"
-            :key="page.cid"
-            :value="page.page"
-            :label="`P${page.page} · ${page.part}`"
-          />
+      <div v-if="video.pages.length > 1" class="video-page-row" :aria-busy="pageBusy">
+        <span class="video-field-label">分集</span>
+        <ElSelect :model-value="video.page" class="page-select" :disabled="busy || pageBusy" filterable
+          aria-label="选择分集" popper-class="video-parts-menu" @update:model-value="onPageChange">
+          <ElOption v-for="page in video.pages" :key="page.cid" :value="page.page" :label="`P${page.page} · ${page.part}`">
+            <div class="video-part-option">
+              <span class="video-part-number">P{{ page.page }}</span>
+              <span class="video-part-title">{{ page.part }}</span>
+              <span class="video-part-duration">{{ formatDuration(page.duration) }}</span>
+            </div>
+          </ElOption>
         </ElSelect>
+        <div class="video-page-navigation">
+          <ElButton text title="上一 P" aria-label="上一分集" :disabled="busy || pageBusy || pageIndex <= 0" @click="onPageChange(video.pages[pageIndex - 1]!.page)"><ChevronLeft :size="16" /></ElButton>
+          <span class="video-page-count" role="status"><LoaderCircle v-if="pageBusy" :size="14" class="spin" aria-label="正在切换分集" /><template v-else>{{ pageIndex + 1 }} / {{ video.pages.length }}</template></span>
+          <ElButton text title="下一 P" aria-label="下一分集" :disabled="busy || pageBusy || pageIndex >= video.pages.length - 1" @click="onPageChange(video.pages[pageIndex + 1]!.page)"><ChevronRight :size="16" /></ElButton>
+        </div>
       </div>
 
       <div class="quality-row">

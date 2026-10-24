@@ -4,6 +4,7 @@ import { ElButton, ElEmpty, ElImage, ElMessageBox, ElProgress, ElScrollbar, ElTa
 import { Download, File, Film, FolderOpen, RotateCcw, Trash2, X } from '@lucide/vue'
 import type { DownloadTask } from '../types'
 import { idBackground } from '../idColor'
+import { imageUrl } from '../imageUrl'
 
 defineProps<{ tasks: DownloadTask[]; emptyLabel: string; removing: string[]; retrying: string[] }>()
 const emit = defineEmits<{
@@ -79,7 +80,7 @@ async function confirmRemove(id: string) {
   <div v-else class="task-list-wrap">
     <ElScrollbar class="task-list" height="100%" wrap-class="list-scroll-wrap">
     <article v-for="task in tasks" :key="task.id" class="task-row">
-      <ElImage class="task-thumbnail" :src="task.cover || undefined" fit="cover" alt="视频封面" loading="lazy">
+      <ElImage class="task-thumbnail" :src="imageUrl(task.cover) || undefined" referrerpolicy="no-referrer" fit="cover" alt="视频封面" loading="lazy">
         <template #placeholder><div class="task-thumbnail-fallback"><Film :size="20" /></div></template>
         <template #error><div class="task-thumbnail-fallback"><Film :size="20" /></div></template>
       </ElImage>
