@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><meta charset="UTF-8"><title>BiliScope · 文档示例</title><body><div id="app"></div><script type="module">
+import {createApp,h} from 'vue';
+import {ElConfigProvider,ElTag} from 'element-plus';
+import {Play,Settings,ArrowDownToLine} from '@lucide/vue';
+import LinkInput from '/src/components/LinkInput.vue';
+import VideoCard from '/src/components/VideoCard.vue';
+import DownloadList from '/src/components/DownloadList.vue';
+import CommentDialog from '/src/components/CommentDialog.vue';
+import {api} from '/src/api.ts';
+import pkg from '/package.json';
+import 'element-plus/dist/index.css';import '/src/assets/styles.css';
+const cover='/docs/images/demo-cover.svg';
+const video={bvid:'BV1DEMO00001',aid:1,title:'城市漫游｜把日常拍成一部短片',cover,duration:328,owner:'示例创作者',page:1,pages:[{page:1,cid:1,part:'街角与午后',duration:328},{page:2,cid:2,part:'夜幕与灯火',duration:246}],qualities:[{id:80,label:'1080P',codec:'AVC',mode:'dash',width:1920,height:1080,fps:'30',bandwidth:4000000,size:52428800,audioLabel:'192K AAC',audioFormat:'m4a',url:'',backup:[],audioUrl:'',audioBackup:[],audioSize:null,needsVip:false,recommended:true}],hint:'清晰度与音质以当前账号实际可用资源为准。'};
+const base={id:'demo',createdAt:0,title:video.title,cover,bvid:video.bvid,page:1,quality:'1080P · AVC',qualityId:80,codec:'AVC',mode:'dash',filename:'城市漫游.mp4',path:'',status:'running',phase:'video',downloaded:27262976,total:52428800,speed:2097152,error:null};
+api.commentVideos=async()=>[{bvid:video.bvid,title:video.title,total:3,updatedAt:1}];
+api.commentJobs=async()=>[{id:'demo',bvid:video.bvid,title:video.title,mode:'hot',status:'completed',pages:1,roots:3,subs:0,total:3,current:'采集完成',note:null,error:null,startedAt:1,finishedAt:2}];
+api.commentStats=async()=>({roots:3,subs:0,total:3});
+api.comments=async()=>['镜头里的街角很有生活气息，喜欢这段光影。','第二段的音乐和画面搭配得很好！','已收藏，周末也想带着相机出门走走。'].map((message,i)=>({rpid:i+1,root:0,parent:0,mid:i+1,uname:['示例用户 A','示例用户 B','示例用户 C'][i],avatarUrl:'',message,like:[28,16,9][i],ctime:1792800000+i*3600,isSub:false,rcount:[2,0,1][i]}));
+const comments=new URLSearchParams(location.search).has('comments');
+createApp({render:()=>h(ElConfigProvider,{size:'small'},()=>comments?h(CommentDialog,{modelValue:true,video}):h('main',{style:'padding:24px;max-width:1000px;margin:auto'},[
+ h('header',{style:'display:flex;align-items:center;gap:12px;margin:0 0 24px'},[h('div',{style:'background:#ff80a5;color:white;border-radius:14px;padding:12px;display:flex'},h(Play,{size:22,fill:'currentColor'})),h('strong',{style:'font-size:23px'},'BiliScope'),h(ElTag,{type:'primary'},()=>`v${pkg.version}`),h('span',{style:'margin-left:auto;font-size:13px;color:#7c879b'},'界面演示 · 示例数据'),h(Settings,{size:20})]),
+ h('section',{class:'capture-panel'},[h('div',{class:'capture-heading'},h('h2','添加视频')),h(LinkInput,{busy:false}),h('section',{class:'result-section'},h(VideoCard,{video,selectedQuality:0}))]),
+ h('section',{class:'downloads-section has-tasks',style:'margin-top:18px;min-height:0'},[h('div',{class:'section-heading'},[h('h2',[h(ArrowDownToLine,{size:17}),'下载队列']),h('span',{style:'font-size:13px;color:#db487c'},'进行中 1')]),h(DownloadList,{tasks:[base,{...base,id:'audio',status:'completed',mode:'audio',quality:'仅音频 · 192K AAC',downloaded:7864320,total:7864320}],emptyLabel:'暂无下载',removing:[],retrying:[]})])
+]))}).mount('#app');
+</script></body></html>
